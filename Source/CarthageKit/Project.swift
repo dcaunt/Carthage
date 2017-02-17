@@ -722,6 +722,17 @@ public final class Project {
 					.map { project, _ in project }
 					.filter { project in dependenciesToInclude?.contains(project.name) ?? false })
 
+				let unknownDependencies = (dependenciesToInclude ?? []).filter { includedDependency in
+					return projectsToInclude.contains(where: { return $0.name == includedDependency })
+				}
+				// TODO: This works for update but not bootstrap
+
+				print("Request: \(dependenciesToInclude)")
+				print("Projects to include: \(projectsToInclude)")
+				print("Unknown: \(unknownDependencies)")
+				guard unknownDependencies.isEmpty else {
+					return SignalProducer(error: .unknownDependencies(Array(unknownDependencies)))
+				}
 				guard let sortedProjects = topologicalSort(graph, nodes: projectsToInclude) else {
 					return SignalProducer(error: .dependencyCycle(graph))
 				}
